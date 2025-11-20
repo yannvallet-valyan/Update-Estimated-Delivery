@@ -2,6 +2,24 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [1.0.3] - 2025-11-20
+
+### 🐛 Corrigé
+- **Détection des paramètres individuels améliorée** : Vérification stricte avec intval() > 0
+- Correction du bug où les produits avec des champs vides ou '0' bloquaient l'addon
+- Meilleure logique pour déterminer si un produit a des paramètres personnalisés
+
+### ✨ Ajouté
+- **Mode Debug intégré** : Ajoutez `?eda_debug=1` à l'URL pour diagnostiquer les problèmes
+- Affichage détaillé de tous les paramètres du produit
+- Identification automatique de la raison pour laquelle l'addon ne s'applique pas
+- Documentation DEBUG.md complète pour le dépannage
+
+### 🔄 Amélioré
+- Vérification de TOUS les champs du produit (days, max_days, outstock, backorders)
+- Un produit n'est considéré comme ayant des paramètres personnalisés QUE si au moins un champ > 0
+- Meilleure clarté dans la logique de priorité
+
 ## [1.0.2] - 2025-11-20
 
 ### ✨ Amélioré
