@@ -2,6 +2,27 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [1.0.4] - 2025-11-20
+
+### ✨ Ajouté
+- **Page Outils Admin** : Nouveau menu "Outils Addon Delivery" sous WooCommerce
+- Liste automatique de tous les produits avec paramètres individuels
+- Bouton pour nettoyer un produit spécifique
+- Bouton pour nettoyer tous les produits en une seule action
+- Lien direct vers le mode debug pour chaque produit
+- Guide AFFICHER-METABOX.md pour les utilisateurs sans metabox visible
+
+### 🔄 Amélioré
+- Interface visuelle pour gérer les produits sans accéder à la metabox
+- Possibilité de nettoyer les métadonnées sans SQL manuel
+- Messages de confirmation avant suppression
+- Compteur de produits et métadonnées supprimées
+
+### 🛠️ Pour les Utilisateurs Sans Metabox
+- Si vous ne voyez pas la metabox "Estimated Delivery", utilisez la page Outils
+- La page Outils liste tous les produits avec paramètres cachés
+- Un clic pour les nettoyer et appliquer l'addon automatiquement
+
 ## [1.0.3] - 2025-11-20
 
 ### 🐛 Corrigé

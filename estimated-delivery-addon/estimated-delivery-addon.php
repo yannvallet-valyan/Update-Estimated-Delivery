@@ -3,7 +3,7 @@
  * Plugin Name: Estimated Delivery Addon - Product Types & Categories
  * Description: Ajoute des options de délais de livraison par type de produit et par catégorie pour le plugin Estimated Delivery
  * Author: Extended by AI
- * Version: 1.0.3
+ * Version: 1.0.4
  * Text Domain: estimated-delivery-addon
  * Domain Path: /languages
  * WC requires at least: 3.0
@@ -34,12 +34,13 @@ function eda_parent_plugin_notice() {
 
 // Définir les constantes
 define('EDA_PATH', dirname(__FILE__) . '/');
-define('EDA_VERSION', '1.0.3');
+define('EDA_VERSION', '1.0.4');
 define('EDA_PLUGIN_FILE', __FILE__);
 
 // Charger les classes
 require_once EDA_PATH . 'includes/class-admin.php';
 require_once EDA_PATH . 'includes/class-filters.php';
+require_once EDA_PATH . 'includes/class-tools.php';
 
 // Initialiser le plugin
 if(!class_exists('EDA_Core')) {
