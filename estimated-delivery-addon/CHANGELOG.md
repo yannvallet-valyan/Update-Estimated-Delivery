@@ -2,6 +2,18 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [1.0.2] - 2025-11-20
+
+### ✨ Amélioré
+- **Détection automatique des paramètres individuels** : Le plugin détecte maintenant si un produit a des paramètres configurés (même sans l'option "Overwrite")
+- Plus besoin de modifier manuellement les produits
+- Le plugin fonctionne maintenant totalement automatiquement
+
+### 📚 Documentation
+- Ajout du guide **QUICKSTART.md** pour un démarrage rapide
+- Mise à jour de TROUBLESHOOTING.md avec le nouveau fonctionnement
+- Mise à jour de README.md pour refléter la détection automatique
+
 ## [1.0.1] - 2025-11-20
 
 ### 🐛 Corrigé

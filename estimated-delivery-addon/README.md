@@ -40,7 +40,7 @@ Pour chaque type/catégorie, vous pouvez configurer :
 
 Le plugin applique les délais selon cet ordre de priorité :
 
-1. **Paramètres du produit individuel** (si l'option "Overwrite" est activée sur le produit)
+1. **Paramètres du produit individuel** (si le produit a des valeurs configurées dans sa metabox)
 2. **Paramètres de la catégorie** (configurés dans ce plugin)
 3. **Paramètres du type de produit** (configurés dans ce plugin)
 4. **Paramètres généraux** (du plugin Estimated Delivery principal)
@@ -54,6 +54,7 @@ Le plugin utilise le système de filtres WordPress `pre_option_{$option}` pour i
 - ✅ Chaque produit peut avoir sa propre configuration selon son type/catégorie
 - ✅ Compatible avec le mode cache/AJAX du plugin principal
 - ✅ Si vous désactivez l'addon, les paramètres généraux reprennent le dessus automatiquement
+- ✅ **Détection automatique** : Si un produit a des paramètres individuels, ils ont priorité absolue
 
 ## 📖 Exemples d'Utilisation
 

@@ -113,7 +113,12 @@ class EDA_Filters {
 
         // Vérifier si le produit a une surcharge personnalisée activée
         $overwrite = get_post_meta($product_id, '_edw_overwrite', true);
-        if($overwrite == '1') {
+
+        // AUSSI vérifier si le produit a des paramètres individuels configurés
+        // Si _edw_days est configuré (même sans overwrite), on ne surcharge pas
+        $product_has_own_days = get_post_meta($product_id, '_edw_days', true);
+
+        if($overwrite == '1' || ($product_has_own_days !== '' && $product_has_own_days !== false)) {
             // Le produit a ses propres paramètres, ne pas appliquer nos filtres
             return;
         }

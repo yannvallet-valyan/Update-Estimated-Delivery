@@ -9,15 +9,18 @@ Vous avez configuré des délais pour un type ou une catégorie, mais le produit
 
 ### Solutions
 
-#### 1. Vérifier l'option "Overwrite" du produit
+#### 1. Vérifier si le produit a des paramètres individuels
 **Le problème le plus courant !**
 
-1. Éditez le produit dans WordPress
-2. Cherchez la metabox **"Estimated Delivery"**
-3. **Décochez** l'option "Overwrite general settings"
-4. Sauvegardez le produit
+Le plugin détecte **automatiquement** si un produit a ses propres paramètres configurés.
 
-**Explication** : Quand "Overwrite" est activé, le produit utilise ses propres paramètres et ignore les réglages de type/catégorie.
+1. Éditez le produit dans WordPress
+2. Cherchez la metabox **"Estimated Delivery"** (peut être en bas de page)
+3. Si vous voyez des valeurs dans les champs "Days for Delivery", le produit utilise ses propres paramètres
+4. **Videz tous les champs** de cette metabox pour utiliser les paramètres de type/catégorie
+5. Sauvegardez le produit
+
+**Explication** : Les paramètres individuels du produit ont **toujours priorité** sur les paramètres de type/catégorie.
 
 #### 2. Vérifier que les valeurs sont bien configurées
 1. Allez dans **WooCommerce > Délais par Type/Catégorie**
