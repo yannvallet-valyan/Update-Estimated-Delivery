@@ -45,6 +45,16 @@ Le plugin applique les délais selon cet ordre de priorité :
 3. **Paramètres du type de produit** (configurés dans ce plugin)
 4. **Paramètres généraux** (du plugin Estimated Delivery principal)
 
+### 💡 Comment ça fonctionne techniquement
+
+Le plugin utilise le système de filtres WordPress `pre_option_{$option}` pour intercepter les valeurs AVANT que le plugin principal ne les lise. Cela signifie que :
+
+- ✅ Les délais configurés dans l'addon **remplacent** les paramètres généraux
+- ✅ Le plugin ne modifie PAS les paramètres globaux stockés en base de données
+- ✅ Chaque produit peut avoir sa propre configuration selon son type/catégorie
+- ✅ Compatible avec le mode cache/AJAX du plugin principal
+- ✅ Si vous désactivez l'addon, les paramètres généraux reprennent le dessus automatiquement
+
 ## 📖 Exemples d'Utilisation
 
 ### Exemple 1 : Produits Volumineux

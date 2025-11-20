@@ -2,6 +2,27 @@
 
 Toutes les modifications notables de ce projet seront documentées dans ce fichier.
 
+## [1.0.1] - 2025-11-20
+
+### 🐛 Corrigé
+- Problème d'incompatibilité WooCommerce causé par le header "Requires Plugins"
+- Système de filtres complètement refait pour utiliser `pre_option` au lieu de `option`
+- Les délais configurés par type/catégorie remplacent maintenant correctement les paramètres généraux
+- Amélioration de la détection du produit actuel (support des pages produits et listes)
+- Meilleure gestion du contexte AJAX pour le cache
+- Correction du bug qui faisait "planter" l'affichage des produits
+
+### 🔄 Modifié
+- Refonte complète de la classe `EDA_Filters`
+- Utilisation de `pre_option_{$option}` pour intercepter les options AVANT leur lecture
+- Amélioration de la logique de priorisation (Produit > Catégorie > Type > Général)
+- Optimisation du chargement des paramètres personnalisés
+
+### 📚 Technique
+- Les filtres s'appliquent maintenant au bon moment dans le cycle de vie WordPress
+- Meilleure gestion de l'état et du contexte du produit
+- Support complet du mode cache/AJAX du plugin principal
+
 ## [1.0.0] - 2025-11-20
 
 ### ✨ Ajouté

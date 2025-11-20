@@ -3,102 +3,119 @@ if(!defined('ABSPATH')) { exit; }
 
 class EDA_Filters {
 
-    private $current_product_id = null;
-    private $filters_applied = false;
+    private $current_product = null;
+    private $custom_settings = null;
+    private $settings_loaded = false;
 
     public function __construct() {
-        // Hook pour capturer le produit en cours
-        add_filter('woocommerce_product_get_id', array($this, 'capture_product_id'), 10, 1);
+        // Hook prioritaire pour capturer le produit
+        add_action('woocommerce_before_single_product', array($this, 'setup_product_context'), 1);
+        add_action('woocommerce_after_shop_loop_item', array($this, 'setup_product_context'), 1);
 
-        // Hooks pour modifier les options de délai selon le type/catégorie
-        add_filter('option__edw_days', array($this, 'filter_days'), 999, 1);
-        add_filter('option__edw_max_days', array($this, 'filter_max_days'), 999, 1);
-        add_filter('option__edw_days_outstock', array($this, 'filter_days_outstock'), 999, 1);
-        add_filter('option__edw_max_days_outstock', array($this, 'filter_max_days_outstock'), 999, 1);
-        add_filter('option__edw_days_backorders', array($this, 'filter_days_backorders'), 999, 1);
-        add_filter('option__edw_max_days_backorders', array($this, 'filter_max_days_backorders'), 999, 1);
+        // Hooks pour intercepter les options AVANT leur lecture (pre_option)
+        add_filter('pre_option__edw_days', array($this, 'filter_days'), 10, 1);
+        add_filter('pre_option__edw_max_days', array($this, 'filter_max_days'), 10, 1);
+        add_filter('pre_option__edw_days_outstock', array($this, 'filter_days_outstock'), 10, 1);
+        add_filter('pre_option__edw_max_days_outstock', array($this, 'filter_max_days_outstock'), 10, 1);
+        add_filter('pre_option__edw_days_backorders', array($this, 'filter_days_backorders'), 10, 1);
+        add_filter('pre_option__edw_max_days_backorders', array($this, 'filter_max_days_backorders'), 10, 1);
 
-        // Hook alternatif pour les produits affichés
-        add_action('woocommerce_before_single_product', array($this, 'setup_product_filters'), 5);
-        add_action('woocommerce_after_shop_loop_item', array($this, 'reset_filters'), 999);
-        add_action('woocommerce_after_single_product', array($this, 'reset_filters'), 999);
+        // Reset après affichage
+        add_action('woocommerce_after_single_product', array($this, 'reset_context'), 999);
+        add_action('woocommerce_after_shop_loop_item', array($this, 'reset_context'), 999);
+
+        // Pour l'API AJAX
+        add_action('wp_ajax_nopriv_edw_get_estimate_dates', array($this, 'setup_ajax_context'), 1);
+        add_action('wp_ajax_edw_get_estimate_dates', array($this, 'setup_ajax_context'), 1);
     }
 
     /**
-     * Capture l'ID du produit en cours
+     * Configure le contexte du produit pour les requêtes AJAX
      */
-    public function capture_product_id($product_id) {
-        if($product_id && !$this->current_product_id) {
-            $this->current_product_id = $product_id;
+    public function setup_ajax_context() {
+        if(isset($_POST['product'])) {
+            $product_id = absint($_POST['product']);
+            $this->current_product = wc_get_product($product_id);
         }
-        return $product_id;
     }
 
     /**
-     * Configure les filtres pour le produit actuel
+     * Configure le contexte du produit
      */
-    public function setup_product_filters() {
+    public function setup_product_context() {
         global $product;
-        if($product) {
-            $this->current_product_id = $product->get_id();
+
+        if($product && is_object($product)) {
+            $this->current_product = $product;
+            $this->settings_loaded = false;
+            $this->custom_settings = null;
         }
     }
 
     /**
-     * Réinitialise les filtres après l'affichage du produit
+     * Réinitialise le contexte
      */
-    public function reset_filters() {
-        $this->current_product_id = null;
-        $this->filters_applied = false;
+    public function reset_context() {
+        $this->current_product = null;
+        $this->custom_settings = null;
+        $this->settings_loaded = false;
     }
 
     /**
-     * Obtient l'ID du produit actuel de différentes manières
+     * Obtient le produit actuel
      */
-    private function get_current_product_id() {
-        // Essayer d'obtenir depuis notre variable
-        if($this->current_product_id) {
-            return $this->current_product_id;
+    private function get_current_product() {
+        // Utiliser le produit stocké si disponible
+        if($this->current_product) {
+            return $this->current_product;
         }
 
-        // Essayer d'obtenir depuis le produit global
+        // Essayer le produit global
         global $product;
         if($product && is_object($product)) {
-            return $product->get_id();
+            $this->current_product = $product;
+            return $this->current_product;
         }
 
-        // Essayer d'obtenir depuis le post global
+        // Essayer depuis le post global
         global $post;
         if($post && $post->post_type === 'product') {
-            return $post->ID;
+            $this->current_product = wc_get_product($post->ID);
+            return $this->current_product;
         }
 
-        // Essayer d'obtenir depuis l'ID de post en cours
+        // Essayer depuis l'ID de la page
         if(is_product()) {
-            return get_the_ID();
+            $this->current_product = wc_get_product(get_the_ID());
+            return $this->current_product;
         }
 
         return null;
     }
 
     /**
-     * Obtient les paramètres personnalisés pour un produit
+     * Charge les paramètres personnalisés pour le produit actuel
      */
-    private function get_custom_settings($product_id) {
-        if(!$product_id) {
-            return null;
+    private function load_custom_settings() {
+        if($this->settings_loaded) {
+            return;
         }
+
+        $this->settings_loaded = true;
+        $this->custom_settings = null;
+
+        $product = $this->get_current_product();
+        if(!$product) {
+            return;
+        }
+
+        $product_id = $product->get_id();
 
         // Vérifier si le produit a une surcharge personnalisée activée
         $overwrite = get_post_meta($product_id, '_edw_overwrite', true);
         if($overwrite == '1') {
             // Le produit a ses propres paramètres, ne pas appliquer nos filtres
-            return null;
-        }
-
-        $product = wc_get_product($product_id);
-        if(!$product) {
-            return null;
+            return;
         }
 
         // Ordre de priorité : Catégorie > Type de produit
@@ -110,9 +127,9 @@ class EDA_Filters {
 
             foreach($product_categories as $cat_id) {
                 if(isset($categories_settings[$cat_id])) {
-                    // On a trouvé une configuration pour cette catégorie
                     if($this->has_valid_settings($categories_settings[$cat_id])) {
-                        return $categories_settings[$cat_id];
+                        $this->custom_settings = $categories_settings[$cat_id];
+                        return;
                     }
                 }
             }
@@ -124,134 +141,104 @@ class EDA_Filters {
 
         if(isset($product_types_settings[$product_type])) {
             if($this->has_valid_settings($product_types_settings[$product_type])) {
-                return $product_types_settings[$product_type];
+                $this->custom_settings = $product_types_settings[$product_type];
+                return;
             }
         }
-
-        return null;
     }
 
     /**
-     * Vérifie si les paramètres sont valides (au moins un champ non vide)
+     * Vérifie si les paramètres sont valides
      */
     private function has_valid_settings($settings) {
         if(!is_array($settings)) {
             return false;
         }
 
-        return !empty($settings['days']) ||
-               !empty($settings['max_days']) ||
-               !empty($settings['days_outstock']) ||
-               !empty($settings['max_days_outstock']) ||
-               !empty($settings['days_backorders']) ||
-               !empty($settings['max_days_backorders']);
+        return isset($settings['days']) ||
+               isset($settings['max_days']) ||
+               isset($settings['days_outstock']) ||
+               isset($settings['max_days_outstock']) ||
+               isset($settings['days_backorders']) ||
+               isset($settings['max_days_backorders']);
     }
 
     /**
      * Filtre les jours de livraison
      */
-    public function filter_days($value) {
-        $product_id = $this->get_current_product_id();
-        if(!$product_id) {
-            return $value;
+    public function filter_days($pre_option) {
+        $this->load_custom_settings();
+
+        if($this->custom_settings !== null && isset($this->custom_settings['days'])) {
+            return strval($this->custom_settings['days']);
         }
 
-        $custom_settings = $this->get_custom_settings($product_id);
-        if($custom_settings && isset($custom_settings['days']) && $custom_settings['days'] !== '') {
-            $this->filters_applied = true;
-            return $custom_settings['days'];
-        }
-
-        return $value;
+        // Retourner false pour utiliser la valeur par défaut
+        return false;
     }
 
     /**
      * Filtre les jours maximum de livraison
      */
-    public function filter_max_days($value) {
-        $product_id = $this->get_current_product_id();
-        if(!$product_id) {
-            return $value;
+    public function filter_max_days($pre_option) {
+        $this->load_custom_settings();
+
+        if($this->custom_settings !== null && isset($this->custom_settings['max_days'])) {
+            return strval($this->custom_settings['max_days']);
         }
 
-        $custom_settings = $this->get_custom_settings($product_id);
-        if($custom_settings && isset($custom_settings['max_days']) && $custom_settings['max_days'] !== '') {
-            $this->filters_applied = true;
-            return $custom_settings['max_days'];
-        }
-
-        return $value;
+        return false;
     }
 
     /**
      * Filtre les jours de livraison hors stock
      */
-    public function filter_days_outstock($value) {
-        $product_id = $this->get_current_product_id();
-        if(!$product_id) {
-            return $value;
+    public function filter_days_outstock($pre_option) {
+        $this->load_custom_settings();
+
+        if($this->custom_settings !== null && isset($this->custom_settings['days_outstock'])) {
+            return strval($this->custom_settings['days_outstock']);
         }
 
-        $custom_settings = $this->get_custom_settings($product_id);
-        if($custom_settings && isset($custom_settings['days_outstock']) && $custom_settings['days_outstock'] !== '') {
-            $this->filters_applied = true;
-            return $custom_settings['days_outstock'];
-        }
-
-        return $value;
+        return false;
     }
 
     /**
      * Filtre les jours maximum de livraison hors stock
      */
-    public function filter_max_days_outstock($value) {
-        $product_id = $this->get_current_product_id();
-        if(!$product_id) {
-            return $value;
+    public function filter_max_days_outstock($pre_option) {
+        $this->load_custom_settings();
+
+        if($this->custom_settings !== null && isset($this->custom_settings['max_days_outstock'])) {
+            return strval($this->custom_settings['max_days_outstock']);
         }
 
-        $custom_settings = $this->get_custom_settings($product_id);
-        if($custom_settings && isset($custom_settings['max_days_outstock']) && $custom_settings['max_days_outstock'] !== '') {
-            $this->filters_applied = true;
-            return $custom_settings['max_days_outstock'];
-        }
-
-        return $value;
+        return false;
     }
 
     /**
      * Filtre les jours de livraison en précommande
      */
-    public function filter_days_backorders($value) {
-        $product_id = $this->get_current_product_id();
-        if(!$product_id) {
-            return $value;
+    public function filter_days_backorders($pre_option) {
+        $this->load_custom_settings();
+
+        if($this->custom_settings !== null && isset($this->custom_settings['days_backorders'])) {
+            return strval($this->custom_settings['days_backorders']);
         }
 
-        $custom_settings = $this->get_custom_settings($product_id);
-        if($custom_settings && isset($custom_settings['days_backorders']) && $custom_settings['days_backorders'] !== '') {
-            $this->filters_applied = true;
-            return $custom_settings['days_backorders'];
-        }
-
-        return $value;
+        return false;
     }
 
     /**
      * Filtre les jours maximum de livraison en précommande
      */
-    public function filter_max_days_backorders($value) {
-        $product_id = $this->get_current_product_id();
-        if(!$product_id) {
-            return $value;
+    public function filter_max_days_backorders($pre_option) {
+        $this->load_custom_settings();
+
+        if($this->custom_settings !== null && isset($this->custom_settings['max_days_backorders'])) {
+            return strval($this->custom_settings['max_days_backorders']);
         }
 
-        $custom_settings = $this->get_custom_settings($product_id);
-        if($custom_settings && isset($custom_settings['max_days_backorders']) && $custom_settings['max_days_backorders'] !== '') {
-            $this->filters_applied = true;
-            return $custom_settings['max_days_backorders'];
-        }
-
-        return $value;
+        return false;
     }
 }
